@@ -157,7 +157,7 @@ logic [8:0] counter;
 logic [256:0] n, m, t ;
 
 assign o_finished = (counter == 9'd257);
-assign o_data = m[255:0];
+assign o_data = t[255:0];
 always_ff @(posedge i_clk, posedge i_rst) begin
 	if(i_rst) begin
 		n <= 0;
