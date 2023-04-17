@@ -56,6 +56,7 @@ parameter S_PLAY_PAUSE = 5;
 logic i2c_oen, i2c_sdat;
 logic [19:0] addr_record, addr_play;
 logic [15:0] data_record, data_play, dac_data;
+logic record_valid;
 
 assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 
@@ -63,7 +64,7 @@ assign o_SRAM_ADDR = (state_r == S_RECD) ? addr_record : addr_play[19:0];
 assign io_SRAM_DQ  = (state_r == S_RECD) ? data_record : 16'dz; // sram_dq as output
 assign data_play   = (state_r != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
 
-assign o_SRAM_WE_N = (state_r == S_RECD) ? 1'b0 : 1'b1;
+assign o_SRAM_WE_N = (state_r == S_RECD && o_valid) ? 1'b0 : 1'b1;
 assign o_SRAM_CE_N = 1'b0;
 assign o_SRAM_OE_N = 1'b0;
 assign o_SRAM_LB_N = 1'b0;
@@ -126,6 +127,7 @@ AudRecorder recorder0(
 	.i_data(i_AUD_ADCDAT),
 	.o_address(addr_record),
 	.o_data(data_record),
+	.o_valid(record_valid)
 );
 
 always_comb begin
