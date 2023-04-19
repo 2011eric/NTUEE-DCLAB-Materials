@@ -200,6 +200,10 @@ Top top0(
 	.i_AUD_DACLRCK(AUD_DACLRCK),
 	.o_AUD_DACDAT(AUD_DACDAT)
 
+
+	// SWITCH (fast/slow_0/slow_1/speed)
+	.i_SW(SW[5:0])
+
 	// SEVENDECODER (optional display)
 	// .o_record_time(recd_time),
 	// .o_play_time(play_time),
