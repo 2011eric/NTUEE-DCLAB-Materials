@@ -4,3 +4,5 @@ i2c: I2C_working.sv tb_i2c.sv
 	vcs tb_i2c.sv I2C_working.sv -full64 -R -debug_access+all +v2k -sverilog
 myi2c: I2C.sv tb_i2c.sv
 	vcs tb_i2c.sv I2C.sv -full64 -R -debug_access+all +v2k -sverilog
+top: Top.sv
+	vcs tb_top.sv Top.sv I2C.sv AudDSP.sv AudPlayer.sv AudRecorder.sv -full64 -R -debug_access+all +v2k -sverilog

@@ -16,7 +16,7 @@ module Top (
 	output        o_SRAM_UB_N,
 	
 	// I2C
-	input  i_clk_100k,
+	input  i_clk_100K,
 	output o_I2C_SCLK,
 	inout  io_I2C_SDAT,
 	
@@ -57,7 +57,7 @@ parameter S_PLAY       = 4;
 parameter S_PLAY_PAUSE = 5;
 
 // those are wires
-logic i2c_oen, i2c_sdat, i2c_finished;
+wire i2c_oen, i2c_sdat, i2c_finished;
 logic [19:0] addr_record, addr_play;
 logic [15:0] data_record, data_play, dac_data;
 logic record_valid, record_full;
@@ -76,11 +76,11 @@ logic player_en;
 
 assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 
-assign o_SRAM_ADDR = (state_r == S_RECD) ? addr_record : addr_play[19:0];
-assign io_SRAM_DQ  = (state_r == S_RECD) ? data_record : 16'dz; // sram_dq as output
-assign data_play   = (state_r != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
+assign o_SRAM_ADDR = (state == S_RECD) ? addr_record : addr_play[19:0];
+assign io_SRAM_DQ  = (state == S_RECD) ? data_record : 16'dz; // sram_dq as output
+assign data_play   = (state != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
 
-assign o_SRAM_WE_N = (state_r == S_RECD && o_valid && !record_full) ? 1'b0 : 1'b1;
+assign o_SRAM_WE_N = (state == S_RECD && record_valid && !record_full) ? 1'b0 : 1'b1;
 assign o_SRAM_CE_N = 1'b0;
 assign o_SRAM_OE_N = 1'b0;
 assign o_SRAM_LB_N = 1'b0;
@@ -93,12 +93,12 @@ assign o_SRAM_UB_N = 1'b0;
 // sequentially sent out settings to initialize WM8731 with I2C protocal
 I2cInitializer init0(
 	.i_rst_n(i_rst_n),
-	.i_clk(i_clk_100K),
+	.i_clk_100K(i_clk_100K),
 	.i_start(i2c_start),
 	.o_finished(i2c_finished),
-	.o_sclk(o_I2C_SCLK),
-	.o_sdat(i2c_sdat),
-	.o_oen(i2c_oen) // you are outputing (you are not outputing only when you are "ack"ing.)
+	.o_I2C_SCLK(o_I2C_SCLK),
+	.i2c_sdat(i2c_sdat),
+	.i2c_oen(i2c_oen) // you are outputing (you are not outputing only when you are "ack"ing.)
 );
 
 // === AudDSP ===
@@ -109,7 +109,7 @@ AudDSP dsp0(
 	.i_clk(i_clk),
 	.i_start(dsp_start),
 	.i_pause(dsp_pause),
-	.i_stop(dsp_stop),
+	.i_stop(),
 	.i_speed(i_SW[2:0]),
 	.i_fast(i_SW[5]),
 	.i_slow_0(i_SW[4]), // constant interpolation
@@ -157,7 +157,7 @@ always_comb begin
 	dsp_pause = 0;
 	dsp_stop = 0;
 
-	i2c_start = 0;
+	i2c_start_next = 0;
 	player_en = 0;
 	case(state)
 		S_IDLE: begin
@@ -215,7 +215,7 @@ always_comb begin
 		S_PLAY: begin
 			//TODO: stop dac
 			player_en = 1;
-			if(addr_play >= addr_record) begin
+			if(addr_play == addr_record) begin
 				state_next = S_IDLE;
 				dsp_stop  = 1;
 			end // time exceed
